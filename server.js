@@ -1,13 +1,28 @@
-import express from "express"
+const express = require("express");
+const dotenv = require("dotenv");
+const connectDB = require("./config/db");
+const cors = require("cors");
 
-const app = express()
+// Load env variables
+dotenv.config();
 
-app.use(express.json())
+// Connect DB
+connectDB();
 
+const app = express();
+
+// Middleware
+app.use(express.json()); // Parse JSON
+app.use(cors()); // Allow frontend requests
+
+// Routes
+app.use("/api/auth", require("./routes/authRoutes"));
+
+// Test route
 app.get("/", (req, res) => {
-    res.json({message: "Hello world"})
-})
+  res.send("API is running...");
+});
 
-app.listen(3000, () => {
-    console.log("Server running at port http://localhost:3000")
-})
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
