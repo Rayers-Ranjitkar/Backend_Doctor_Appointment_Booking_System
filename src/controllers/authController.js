@@ -1,71 +1,91 @@
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+import { isDatabaseConnected } from '../config/database.js';
+import { dbAuthStore } from '../store/dbAuthStore.js';
+import { demoAuthStore } from '../store/demoAuthStore.js';
 
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
-};
+// Select which auth store to use
+function activeAuthStore() {
+  return isDatabaseConnected() ? dbAuthStore : demoAuthStore;
+}
 
-// @desc Register User
-exports.registerUser = async (req, res) => {
-  try {
-    const { name, email, password, role } = req.body;
+// LOGIN
+export async function login(req, res) {
+  const result = await activeAuthStore().login(req.body);
 
-    // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-    });
-
-    // Send response with token
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  if (result.error) {
+    return res.status(401).json(result);
   }
-};
 
-// @desc Login User
-exports.loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  return res.json(result);
+}
 
-    // Find user
-    const user = await User.findOne({ email });
-
-    // Check password
-    if (user && (await bcrypt.compare(password, user.password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(401).json({ message: "Invalid email or password" });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+// ADMIN CHECK
+function requireAdmin(req, res) {
+  if (req.auth?.role !== 'admin') {
+    res.status(403).json({ error: 'Admin access required.' });
+    return false;
   }
-};
+  return true;
+}
+
+// SIGNUP PATIENT
+export async function signupPatient(req, res) {
+  const result = await activeAuthStore().signupPatient(req.body);
+
+  if (result.error) {
+    return res.status(400).json(result);
+  }
+
+  return res.status(201).json(result);
+}
+
+// CREATE ADMIN
+export async function createAdmin(req, res) {
+  if (!requireAdmin(req, res)) return;
+
+  const result = await activeAuthStore().createAdmin(req.body);
+
+  if (result.error) {
+    return res.status(400).json(result);
+  }
+
+  return res.status(201).json(result);
+}
+
+// CREATE DOCTOR
+export async function createDoctor(req, res) {
+  if (!requireAdmin(req, res)) return;
+
+  const result = await activeAuthStore().createDoctor(req.body);
+
+  if (result.error) {
+    return res.status(400).json(result);
+  }
+
+  return res.status(201).json(result);
+}
+
+// GET CURRENT USER
+export async function me(req, res) {
+  const user = await activeAuthStore().me(req.auth);
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found.' });
+  }
+
+  return res.json({ user });
+}
+
+// CHANGE PASSWORD
+export async function changePassword(req, res) {
+  const result = await activeAuthStore().changePassword(
+    req.auth.sub,
+    req.body.currentPassword,
+    req.body.newPassword
+  );
+
+  if (result.error) {
+    return res.status(400).json(result);
+  }
+
+  return res.json(result);
+}
