@@ -1,31 +1,26 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+import { readAccessToken } from '../services/authservice.js';
 
-// Protect routes middleware
-const protect = async (req, res, next) => {
-  let token;
+// Middleware to protect routes (requires valid JWT token)
+export function requireAuth(req, res, next) {
+  // Get Authorization header (e.g., "Bearer <token>")
+  const header = req.headers.authorization || '';
 
-  // Check if token exists in headers
-  if (req.headers.authorization?.startsWith("Bearer")) {
-    try {
-      // Get token
-      token = req.headers.authorization.split(" ")[1];
+  // Extract token from "Bearer <token>"
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
 
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Get user from DB
-      req.user = await User.findById(decoded.id).select("-password");
-
-      next();
-    } catch (error) {
-      res.status(401).json({ message: "Not authorized" });
-    }
-  }
-
+  // If no token is provided
   if (!token) {
-    res.status(401).json({ message: "No token provided" });
+    return res.status(401).json({ error: 'Authentication required.' });
   }
-};
 
-module.exports = protect;
+  try {
+    // Verify and decode token → store in req.auth
+    req.auth = readAccessToken(token);
+
+    // Continue to next middleware/controller
+    return next();
+  } catch {
+    // If token is invalid or expired
+    return res.status(401).json({ error: 'Invalid or expired session.' });
+  }
+}

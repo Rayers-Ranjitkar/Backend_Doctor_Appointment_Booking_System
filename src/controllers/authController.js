@@ -2,23 +2,26 @@ import { isDatabaseConnected } from '../config/database.js';
 import { dbAuthStore } from '../store/dbAuthStore.js';
 import { demoAuthStore } from '../store/demoAuthStore.js';
 
-// Select which auth store to use
+// Decide which auth store to use (DB or in-memory demo)
 function activeAuthStore() {
   return isDatabaseConnected() ? dbAuthStore : demoAuthStore;
 }
 
-// LOGIN
+// LOGIN USER
 export async function login(req, res) {
+  // Pass request body to auth store login method
   const result = await activeAuthStore().login(req.body);
 
+  // If login fails (wrong credentials, etc.)
   if (result.error) {
     return res.status(401).json(result);
   }
 
+  // If login successful
   return res.json(result);
 }
 
-// ADMIN CHECK
+// Check if current user is admin
 function requireAdmin(req, res) {
   if (req.auth?.role !== 'admin') {
     res.status(403).json({ error: 'Admin access required.' });
@@ -31,14 +34,16 @@ function requireAdmin(req, res) {
 export async function signupPatient(req, res) {
   const result = await activeAuthStore().signupPatient(req.body);
 
+  // If validation or signup error
   if (result.error) {
     return res.status(400).json(result);
   }
 
+  // Success response
   return res.status(201).json(result);
 }
 
-// CREATE ADMIN
+// CREATE ADMIN (Protected route)
 export async function createAdmin(req, res) {
   if (!requireAdmin(req, res)) return;
 
@@ -51,7 +56,7 @@ export async function createAdmin(req, res) {
   return res.status(201).json(result);
 }
 
-// CREATE DOCTOR
+// CREATE DOCTOR (Protected route)
 export async function createDoctor(req, res) {
   if (!requireAdmin(req, res)) return;
 
@@ -64,8 +69,9 @@ export async function createDoctor(req, res) {
   return res.status(201).json(result);
 }
 
-// GET CURRENT USER
+// GET CURRENT LOGGED-IN USER
 export async function me(req, res) {
+  // req.auth comes from auth middleware (decoded JWT)
   const user = await activeAuthStore().me(req.auth);
 
   if (!user) {
@@ -78,7 +84,7 @@ export async function me(req, res) {
 // CHANGE PASSWORD
 export async function changePassword(req, res) {
   const result = await activeAuthStore().changePassword(
-    req.auth.sub,
+    req.auth.sub, // user ID from token
     req.body.currentPassword,
     req.body.newPassword
   );
