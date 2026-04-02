@@ -1,10 +1,11 @@
 import { isDatabaseConnected } from '../config/database.js';
 import { dbAuthStore } from '../store/dbAuthStore.js';
-import { demoAuthStore } from '../store/demoAuthStore.js';
 
 // Decide which auth store to use (DB or in-memory demo)
 function activeAuthStore() {
-  return isDatabaseConnected() ? dbAuthStore : demoAuthStore;
+  if (isDatabaseConnected) {
+    return dbAuthStore
+  }
 }
 
 // LOGIN USER
