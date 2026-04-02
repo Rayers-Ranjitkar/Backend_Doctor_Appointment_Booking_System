@@ -1,28 +1,18 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
 
-// User Schema (Patient, Doctor, Admin)
 const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    role: {
-      type: String,
-      enum: ["patient", "doctor", "admin"],
-      default: "patient",
-    },
+    id: { type: String, required: true, unique: true },
+    role: { type: String, enum: ['patient', 'doctor', 'admin'], required: true },
+    name: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
+    phone: String,
+    passwordHash: { type: String, required: true },
+    profileId: String,
+    isActive: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true, versionKey: false },
 );
 
-module.exports = mongoose.model("User", userSchema);
+export const User = mongoose.models.User || mongoose.model('User', userSchema);
