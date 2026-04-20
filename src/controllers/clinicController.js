@@ -105,7 +105,7 @@ export async function updateSpecialty(req, res) {
 export async function deleteSpecialty(req, res) {
   const result = await activeStore().deleteSpecialty(req.params.id);
   if (result.error) return res.status(404).json(result);
-  return res.json(result);
+  return res.json(result)
 }
 
 /* Mark all notifications as read */
