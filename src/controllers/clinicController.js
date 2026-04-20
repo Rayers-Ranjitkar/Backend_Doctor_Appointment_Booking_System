@@ -48,3 +48,11 @@ export async function triggerReminders(_req, res) {
   const results = await runReminderSweep();
   res.json({ sent: results.length, results });
 }
+
+export async function addPrescription(req, res) {
+  const result = await activeStore().addPrescription(req.body);
+
+  if (result.error) return res.status(400).json(result);
+
+  return res.status(201).json(result);
+}
