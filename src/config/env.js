@@ -2,26 +2,28 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Get current file path (since __dirname is not available in ES modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from root .env file
-// (goes up 3 folders to find .env)
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-
-// Load default .env (fallback if above path not found)
 dotenv.config();
 
-// Export environment configuration object
 export const env = {
-  // Backend server port (default: 4000)
   port: Number(process.env.PORT || 4000),
-
-  // MongoDB connection URI
   mongoUri: process.env.MONGODB_URI || '',
-
-  // Secret key used for JWT token generation
-  jwtSecret:
-    process.env.JWT_SECRET || 'norvic_demo_jwt_secret_change_me',
+  khaltiSecretKey: process.env.KHALTI_SECRET_KEY || 'demo_khalti_secret',
+  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: Number(process.env.SMTP_PORT || 587),
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  smtpFrom: process.env.SMTP_FROM || 'noreply@medibook.local',
+  reminderPollMs: Number(process.env.REMINDER_POLL_MS || 60000),
+  jwtSecret: process.env.JWT_SECRET || 'norvic_demo_jwt_secret_change_me',
+  // Back-compat (no longer used by MediBook AI assistant)
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  // ── Groq AI ─────────────────────────────────────────────────────────────
+  // Used by MediBook AI assistant via POST /api/assistant
+  groqApiKey: process.env.GROQ_API_KEY || '',
+  groqModel: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
 };

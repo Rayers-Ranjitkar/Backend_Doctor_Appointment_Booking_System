@@ -2,6 +2,8 @@ import { Router } from 'express';
 import {
   addPrescription,
   addReview,
+  createAssistantChat,
+  deleteAssistantChat,
   askAssistant,
   bookAppointment,
   getBootstrap,
@@ -10,12 +12,16 @@ import {
   updatePrescription,
   updateQueue,
   verifyDoctor,
-  // NEW — patients
+  // NEW
+  updateDoctorSchedule,
   deletePatient,
-  // NEW — specialties
   addSpecialty,
   updateSpecialty,
   deleteSpecialty,
+  markAllNotificationsRead,
+  getAssistantChatMessages,
+  listAssistantChats,
+  sendAssistantChatMessage
 } from '../controllers/clinicController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 
@@ -41,19 +47,28 @@ router.post('/reviews', addReview);
 
 // Doctors
 router.patch('/doctors/:id/verification', verifyDoctor);
+router.patch('/doctors/:id/schedule', updateDoctorSchedule);   // NEW
 
 // Assistant
 router.post('/assistant', askAssistant);
 
+// MediBook AI chat history
+router.get('/assistant/chats', listAssistantChats);
+router.post('/assistant/chats', createAssistantChat);
+router.get('/assistant/chats/:id/messages', getAssistantChatMessages);
+router.post('/assistant/chats/:id/messages', sendAssistantChatMessage);
+router.delete('/assistant/chats/:id', deleteAssistantChat);
+
 // Reminders
 router.post('/reminders/run', triggerReminders);
 
-// NEW — Patients (admin only)
-router.delete('/patients/:id', deletePatient);
+// Patients (admin)
+router.delete('/patients/:id', deletePatient);                  // NEW
 
-// NEW — Specialties (admin only)
-router.post('/specialties', addSpecialty);
-router.patch('/specialties/:id', updateSpecialty);
-router.delete('/specialties/:id', deleteSpecialty);
+// Specialties (admin)
+router.post('/specialties', addSpecialty);                      // NEW
+router.patch('/specialties/:id', updateSpecialty);             // NEW
+router.delete('/specialties/:id', deleteSpecialty);            // NEW
+router.patch('/notifications/mark-read', markAllNotificationsRead);
 
 export default router;
