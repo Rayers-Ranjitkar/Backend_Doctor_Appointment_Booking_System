@@ -25,6 +25,7 @@ import {
   sendAssistantChatMessage,
   initiateKhaltiPaymentForAppointment,
   verifyKhaltiPaymentForAppointment,
+  getBookedSlots,
 } from '../controllers/clinicController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 
@@ -79,4 +80,7 @@ router.patch('/notifications/mark-read', markAllNotificationsRead);
 router.post('/payments/khalti/initiate', initiateKhaltiPaymentForAppointment);
 router.post('/payments/khalti/verify', verifyKhaltiPaymentForAppointment);
 
+
+//booked slots routes
+router.get('/doctors/:id/booked-slots', getBookedSlots);
 export default router;

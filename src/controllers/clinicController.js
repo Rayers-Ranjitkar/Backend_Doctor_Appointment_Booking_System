@@ -173,3 +173,8 @@ export async function deleteAssistantChat(req, res) {
   if (result?.error) return res.status(404).json(result);
   res.json(result);
 }
+
+export async function getBookedSlots(req, res) {
+  const result = await activeStore().getBookedSlots(req.params.id, req.query.date);
+  res.json(result);
+}

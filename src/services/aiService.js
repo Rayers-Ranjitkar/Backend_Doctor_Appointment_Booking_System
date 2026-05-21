@@ -83,7 +83,12 @@ If the message is only a greeting (hi/hello/how are you/hey) and contains no sym
 set action = "answer_question", recommendedDoctorId = null, and respond with a short friendly greeting plus helpful suggestions.
 
 2. When a patient describes SYMPTOMS or asks who to see:
-   • Map their symptoms to the most relevant department.
+   • CRITICAL: Each message may describe symptoms for a DIFFERENT person (the user, their mom, their child, etc.). Always recommend based on the CURRENT message's symptoms only — do not carry over the previous person's department.
+   • Strict symptom → department mapping:
+     - Chest pain, chest uneasiness, heart issues → Cardiology (NEVER Neurology)
+     - Headache, dizziness, nerve/brain issues → Neurology
+     - Child/baby/infant/toddler symptoms → Pediatrics ONLY if the patient is explicitly a child
+     - Bone/joint pain → Orthopedics
    • Pick the best matching ACTIVE doctor from the hospital data above.
    • Set action = "recommend_doctor" and fill recommendedDoctorId.
    • Keep summary concise because the server will format the final doctor recommendation block.
@@ -207,15 +212,16 @@ export async function answerAssistant(prompt, clinic, conversationHistory = []) 
     : [];
 
   const requestBody = {
-    model: env.groqModel || 'llama-3.1-8b-instant',
+    model: env.groqModel || 'llama-3.3-70b-versatile',
     messages: [
       { role: 'system', content: systemPrompt },
       ...historyMessages,
       { role: 'user', content: cleanPrompt },
     ],
-    temperature: 0.2, // more consistent JSON
+    temperature: 0.1,
     top_p: 0.9,
-    max_tokens: 320,
+    max_tokens: 400,
+    response_format: { type: 'json_object' },
   };
 
   try {
@@ -226,7 +232,7 @@ export async function answerAssistant(prompt, clinic, conversationHistory = []) 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(15_000), // 15 s timeout
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!response.ok) {
@@ -248,7 +254,7 @@ export async function answerAssistant(prompt, clinic, conversationHistory = []) 
 
     const data = await response.json();
 
-    // Extract the raw text from Groq's OpenAI-compatible response structure
+    // Extract the raw text from Groq's response
     const rawText = data?.choices?.[0]?.message?.content ?? '';
 
     if (!rawText) {
