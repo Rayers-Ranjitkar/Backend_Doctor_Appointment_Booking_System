@@ -6,6 +6,7 @@ import { app } from './app.js';
 import { initializeAuthSeed } from './store/dbAuthStore.js';
 import { initializeDatabaseSeed } from './store/dbClinicStore.js';
 import { startReminderScheduler } from './services/reminderService.js';
+import { startCleanupScheduler } from './services/cleanupService.js';
 import { attachRealtime } from './services/realtimeService.js';
 import dns from "dns"
 
@@ -22,6 +23,7 @@ if (connected) {
 
 // Start background scheduler (e.g., for reminders/notifications)
 startReminderScheduler(env.reminderPollMs);
+startCleanupScheduler();
 
 // Create HTTP server using Express app
 const server = http.createServer(app);
