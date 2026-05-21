@@ -7,6 +7,7 @@ import {
   askAssistant,
   bookAppointment,
   getBootstrap,
+  getQueue,
   triggerReminders,
   updateAppointment,
   updatePrescription,
@@ -21,7 +22,10 @@ import {
   markAllNotificationsRead,
   getAssistantChatMessages,
   listAssistantChats,
-  sendAssistantChatMessage
+  sendAssistantChatMessage,
+  initiateKhaltiPaymentForAppointment,
+  verifyKhaltiPaymentForAppointment,
+  getBookedSlots,
 } from '../controllers/clinicController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 
@@ -40,6 +44,7 @@ router.post('/prescriptions', addPrescription);
 router.patch('/prescriptions/:id', updatePrescription);
 
 // Queue
+router.get('/queue', getQueue)
 router.patch('/queue/:id', updateQueue);
 
 // Reviews
@@ -71,4 +76,11 @@ router.patch('/specialties/:id', updateSpecialty);             // NEW
 router.delete('/specialties/:id', deleteSpecialty);            // NEW
 router.patch('/notifications/mark-read', markAllNotificationsRead);
 
+// Payments (Khalti)
+router.post('/payments/khalti/initiate', initiateKhaltiPaymentForAppointment);
+router.post('/payments/khalti/verify', verifyKhaltiPaymentForAppointment);
+
+
+//booked slots routes
+router.get('/doctors/:id/booked-slots', getBookedSlots);
 export default router;
