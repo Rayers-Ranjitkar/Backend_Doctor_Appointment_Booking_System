@@ -1,188 +1,547 @@
 import { demoClinic } from '../data/demoData.js';
-import { Appointment } from '../models/Appointment.js';
-import { Payment } from '../models/Payment.js';
-import { createKhaltiPayment } from '../services/paymentService.js';
 
-/* Seed initial data into database */
+import { Appointment } from '../models/Appointment.js';
+import { Doctor } from '../models/Doctor.js';
+import { Notification } from '../models/Notification.js';
+import { Patient } from '../models/Patient.js';
+import { Payment } from '../models/Payment.js';
+import { Prescription } from '../models/Prescription.js';
+import { QueueEntry } from '../models/QueueEntry.js';
+import { Review } from '../models/Review.js';
+import { Specialty } from '../models/Specialty.js';
+
+import { createNotification } from '../services/notificationService.js';
+
+import {
+  buildKhaltiCustomerInfo,
+  createKhaltiPayment,
+  initiateKhaltiPayment,
+  lookupKhaltiPayment,
+} from '../services/paymentService.js';
+
+import { answerAssistant } from '../services/aiService.js';
+import { emitRealtime } from '../services/realtimeService.js';
+
+import { env } from '../config/env.js';
+
+import {
+  calendarDateStringLocal,
+  filterQueueEntriesForCalendarDay,
+  isPastCalendarDate,
+} from '../utils/calendarDate.js';
+
+/**
+ * Seeds a MongoDB collection only if it is empty.
+ */
 async function seedCollection(Model, items) {
+
+  // Count existing documents
   const count = await Model.countDocuments();
+
+  // Insert demo data only if collection is empty
   if (count === 0 && items.length) {
-    await Model.insertMany(items, { ordered: false });
+    await Model.insertMany(items, {
+      ordered: false,
+    });
   }
 }
 
-/* Initialize database with appointment and payment data */
+/**
+ * Initializes all database seed data.
+ */
 export async function initializeDatabaseSeed() {
-  await seedCollection(Appointment, demoClinic.appointments);
-  await seedCollection(Payment, demoClinic.payments);
+
+  await seedCollection(
+    Specialty,
+    demoClinic.specialties,
+  );
+
+  await seedCollection(
+    Doctor,
+    demoClinic.doctors,
+  );
+
+  await seedCollection(
+    Patient,
+    demoClinic.patients,
+  );
+
+  await seedCollection(
+    Appointment,
+    demoClinic.appointments,
+  );
+
+  await seedCollection(
+    Notification,
+    demoClinic.notifications,
+  );
+
+  await seedCollection(
+    Prescription,
+    demoClinic.prescriptions,
+  );
+
+  await seedCollection(
+    QueueEntry,
+    demoClinic.queueEntries,
+  );
+
+  await seedCollection(
+    Review,
+    demoClinic.reviews,
+  );
+
+  await seedCollection(
+    Payment,
+    demoClinic.payments,
+  );
 }
 
-/* Build bootstrap data (used when app loads) */
-async function buildBootstrap() {
-  const [appointments, payments] = await Promise.all([
-    Appointment.find().sort({ createdAt: -1 }).lean(),
-    Payment.find().sort({ createdAt: -1 }).lean(),
+/**
+ * Pushes notification for admin users.
+ */
+async function pushNotification(
+  message,
+  type = 'info',
+) {
+
+  await Notification.create(
+    createNotification(
+      message,
+      type,
+      'admin',
+      null,
+    ),
+  );
+
+  emitRealtime(
+    'notifications:changed',
+    {
+      type: 'notification-created',
+    },
+  );
+}
+
+/**
+ * Pushes notification for targeted user role/profile.
+ */
+async function pushTargetedNotification(
+  message,
+  type,
+  recipientRole,
+  recipientProfileId = null,
+) {
+
+  await Notification.create(
+    createNotification(
+      message,
+      type,
+      recipientRole,
+      recipientProfileId,
+    ),
+  );
+
+  emitRealtime(
+    'notifications:changed',
+    {
+      type: 'notification-created',
+    },
+  );
+}
+
+/**
+ * Builds complete application bootstrap data.
+ * Used for dashboard initialization.
+ */
+async function buildBootstrap(auth) {
+
+  /**
+   * Load all required collections in parallel.
+   */
+  const [
+    specialties,
+    doctors,
+    patients,
+    appointments,
+    notifications,
+    prescriptions,
+    queueEntries,
+    reviews,
+    payments,
+  ] = await Promise.all([
+
+    Specialty.find().lean(),
+
+    Doctor.find().lean(),
+
+    Patient.find().lean(),
+
+    Appointment.find()
+      .sort({ createdAt: -1 })
+      .lean(),
+
+    Notification.find()
+      .sort({ createdAt: -1 })
+      .lean(),
+
+    Prescription.find()
+      .sort({ createdAt: -1 })
+      .lean(),
+
+    QueueEntry.find()
+      .sort({ createdAt: -1 })
+      .lean(),
+
+    Review.find()
+      .sort({ createdAt: -1 })
+      .lean(),
+
+    Payment.find()
+      .sort({ createdAt: -1 })
+      .lean(),
   ]);
 
-  /* Basic stats related to appointments and payments */
+  // Current date string
+  const todayStr =
+    calendarDateStringLocal();
+
+  /**
+   * Filter queue entries only for today.
+   */
+  const queueEntriesForToday =
+    filterQueueEntriesForCalendarDay(
+      queueEntries,
+      appointments,
+      todayStr,
+    );
+
+  /**
+   * Dashboard statistics
+   */
   const stats = {
-    totalAppointments: appointments.length,
-    pendingRequests: appointments.filter((a) => a.status === 'pending').length,
-    completedToday: appointments.filter((a) => a.status === 'completed').length,
-    revenue: payments
-      .filter((p) => p.status === 'paid')
-      .reduce((sum, p) => sum + p.amount, 0),
+
+    totalDoctors:
+      doctors.length,
+
+    totalPatients:
+      patients.length,
+
+    totalAppointments:
+      appointments.length,
+
+    todayAppointments:
+      appointments.filter(
+        (appointment) =>
+          appointment.date === todayStr,
+      ).length,
+
+    pendingRequests:
+      appointments.filter(
+        (appointment) =>
+          appointment.status === 'pending',
+      ).length,
+
+    pendingDoctorVerifications:
+      doctors.filter(
+        (doctor) =>
+          doctor.verificationStatus === 'pending',
+      ).length,
+
+    completedToday:
+      appointments.filter(
+        (appointment) =>
+          appointment.date === todayStr &&
+          appointment.status === 'completed',
+      ).length,
+
+    /**
+     * Total revenue from paid payments
+     */
+    revenue:
+      payments
+        .filter(
+          (payment) =>
+            payment.status === 'paid',
+        )
+        .reduce(
+          (sum, payment) =>
+            sum + payment.amount,
+          0,
+        ),
   };
 
-  return { appointments, payments, stats };
+  /**
+   * Show notifications only for authenticated user.
+   */
+  const visibleNotifications = auth
+    ? notifications.filter(
+        (notification) =>
+          notification.recipientRole === auth.role &&
+          (
+            auth.role === 'admin' ||
+            notification.recipientProfileId === auth.profileId
+          ),
+      )
+    : [];
+
+  return {
+    specialties,
+    doctors,
+    patients,
+    appointments,
+
+    notifications:
+      visibleNotifications,
+
+    prescriptions,
+
+    queueEntries:
+      queueEntriesForToday,
+
+    reviews,
+    payments,
+    stats,
+  };
 }
 
-/* Check if a doctor already has an appointment at given time */
-async function isSlotTaken({ doctorId, date, time, excludeAppointmentId }) {
-  const existing = await Appointment.findOne({
-    doctorId,
-    date,
-    time,
-    id: { $ne: excludeAppointmentId },
-    status: { $ne: 'cancelled' },
-  }).lean();
+/**
+ * Checks whether appointment slot is already taken.
+ */
+async function isSlotTaken({
+  doctorId,
+  date,
+  time,
+  excludeAppointmentId,
+}) {
+
+  const existing =
+    await Appointment.findOne({
+
+      doctorId,
+      date,
+      time,
+
+      // Ignore current appointment while updating
+      id: {
+        $ne: excludeAppointmentId,
+      },
+
+      // Ignore cancelled appointments
+      status: {
+        $nin: ['cancelled'],
+      },
+
+      // Ignore failed/unpaid appointments
+      paymentStatus: {
+        $nin: ['awaiting_payment', 'failed'],
+      },
+
+    }).lean();
+
   return Boolean(existing);
+}
+
+/**
+ * Creates queue entry for appointment.
+ */
+async function createQueueEntryForAppointment(
+  appointment,
+) {
+
+  /**
+   * Prevent duplicate active queue entries.
+   */
+  const activeExisting =
+    await QueueEntry.findOne({
+      appointmentId: appointment.id,
+
+      status: {
+        $in: [
+          'waiting',
+          'in_consultation',
+        ],
+      },
+    }).lean();
+
+  if (activeExisting) {
+
+    // Sync queue number if changed
+    if (
+      appointment.queueNumber !==
+      activeExisting.position
+    ) {
+      appointment.queueNumber =
+        activeExisting.position;
+
+      await appointment.save();
+    }
+
+    return activeExisting;
+  }
+
+  /**
+   * Count active queue entries
+   * for same doctor and day.
+   */
+  const count =
+    await QueueEntry.countDocuments({
+
+      doctorId: appointment.doctorId,
+
+      status: {
+        $in: [
+          'waiting',
+          'in_consultation',
+        ],
+      },
+
+      appointmentDate:
+        appointment.date,
+    });
+
+  const position = count + 1;
+
+  /**
+   * Estimated wait:
+   * each patient = 15 mins
+   */
+  const estimatedWaitMinutes =
+    position * 15;
+
+  /**
+   * Create queue entry
+   */
+  const entry = await QueueEntry.create({
+    id: `q${Date.now()}`,
+
+    appointmentId:
+      appointment.id,
+
+    appointmentDate:
+      appointment.date,
+
+    doctorId:
+      appointment.doctorId,
+
+    patientId:
+      appointment.patientId,
+
+    patientName:
+      appointment.patientName,
+
+    position,
+
+    estimatedWaitMinutes,
+
+    actualWaitMinutes: 0,
+
+    status: 'waiting',
+  });
+
+  // Update appointment queue number
+  appointment.queueNumber = position;
+
+  await appointment.save();
+
+  // Notify realtime listeners
+  emitRealtime(
+    'clinic:changed',
+    {
+      type: 'queue-created',
+      appointmentId: appointment.id,
+    },
+  );
+
+  return entry;
 }
 
 export const dbClinicStore = {
 
-  /* Get all appointments and payments */
-  async getBootstrap() {
-    return buildBootstrap();
+  /**
+   * Returns application bootstrap data.
+   */
+  async getBootstrap(auth) {
+    return buildBootstrap(auth);
   },
 
-  /* Book a new appointment */
-  async bookAppointment(payload) {
+  /**
+   * Returns queue entries based on user role.
+   */
+  async getQueue(auth) {
 
-    /* Prevent double booking */
-    if (await isSlotTaken(payload)) {
-      return { error: 'Selected slot is already booked.' };
-    }
+    let queueEntries;
 
-    /* Create appointment */
-    const appointment = await Appointment.create({
-      id: `a${Date.now()}`,
-      patientId: payload.patientId,
-      patientName: payload.patientName,
-      patientAge: payload.patientAge,
-      doctorId: payload.doctorId,
-      doctorName: payload.doctorName,
-      specialty: payload.specialty,
-      hospital: payload.hospital,
-      date: payload.date,
-      time: payload.time,
-      status: payload.paymentStatus === 'paid' ? 'confirmed' : 'pending',
-      paymentStatus: payload.paymentStatus,
-      reason: payload.reason,
-      notes: payload.notes || '',
-      doctorImage: payload.doctorImage,
-      queueNumber: 0,
-      estimatedWaitMinutes: 0,
-      reminderStatus: { sent24h: false, sent1h: false },
-    });
+    // Doctor sees own queue
+    if (auth?.role === 'doctor') {
 
-    /* If already paid, create payment record */
-    if (payload.paymentStatus === 'paid') {
-      await Payment.create(
-        createKhaltiPayment({
-          amount: payload.amount,
-          appointmentId: appointment.id,
-          patientId: appointment.patientId,
-          doctorId: appointment.doctorId,
+      queueEntries =
+        await QueueEntry.find({
+          doctorId: auth.profileId,
         })
+          .sort({ position: 1 })
+          .lean();
+
+    // Patient sees own queue
+    } else if (auth?.role === 'patient') {
+
+      queueEntries =
+        await QueueEntry.find({
+          patientId: auth.profileId,
+        })
+          .sort({ createdAt: -1 })
+          .lean();
+
+    // Admin sees all queue entries
+    } else if (auth?.role === 'admin') {
+
+      queueEntries =
+        await QueueEntry.find()
+          .sort({ createdAt: -1 })
+          .lean();
+
+    } else {
+
+      queueEntries = [];
+    }
+
+    /**
+     * Collect appointment IDs from queue entries.
+     */
+    const ids = [
+      ...new Set(
+        queueEntries
+          .map((e) => e.appointmentId)
+          .filter(Boolean),
+      ),
+    ];
+
+    /**
+     * Fetch appointment dates
+     * for queue filtering.
+     */
+    const appts = ids.length
+      ? await Appointment.find({
+          id: { $in: ids },
+        })
+          .select('id date')
+          .lean()
+      : [];
+
+    const todayStr =
+      calendarDateStringLocal();
+
+    /**
+     * Filter queue only for today.
+     */
+    queueEntries =
+      filterQueueEntriesForCalendarDay(
+        queueEntries,
+        appts,
+        todayStr,
       );
-    }
 
-    return { appointment: appointment.toObject() };
-  },
-
-  /* Update appointment details */
-  async updateAppointment(id, updates) {
-    const appointment = await Appointment.findOne({ id });
-
-    if (!appointment) {
-      return { error: 'Appointment not found.' };
-    }
-
-    /* Prevent rescheduling to occupied slot */
-    if (
-      (updates.date || updates.time) &&
-      (await isSlotTaken({
-        doctorId: appointment.doctorId,
-        date: updates.date || appointment.date,
-        time: updates.time || appointment.time,
-        excludeAppointmentId: appointment.id,
-      }))
-    ) {
-      return { error: 'Requested reschedule slot is already taken.' };
-    }
-
-    Object.assign(appointment, updates);
-    await appointment.save();
-
-    return { appointment: appointment.toObject() };
-  },
-
-  /* Create payment for an appointment */
-  async createPayment(payload) {
-    const appointment = await Appointment.findOne({
-      id: payload.appointmentId,
-    });
-
-    if (!appointment) {
-      return { error: 'Appointment not found.' };
-    }
-
-    /* Create payment record */
-    const payment = await Payment.create({
-      id: `p${Date.now()}`,
-      appointmentId: payload.appointmentId,
-      doctorId: appointment.doctorId,
-      patientId: appointment.patientId,
-      amount: payload.amount,
-      provider: payload.provider,
-      reference: payload.reference,
-      status: payload.status || 'paid',
-      paidAt: new Date().toISOString(),
-    });
-
-    /* Update appointment payment status */
-    appointment.paymentStatus = payment.status;
-
-    if (payment.status === 'paid') {
-      appointment.status = 'confirmed';
-    }
-
-    await appointment.save();
-
-    return { payment: payment.toObject() };
-  },
-
-  /* Mark reminder as sent */
-  async markReminderSent(id, reminderType, mode) {
-    const appointment = await Appointment.findOne({ id });
-
-    if (!appointment) return null;
-
-    appointment.reminderStatus = {
-      sent24h:
-        reminderType === '24h'
-          ? true
-          : Boolean(appointment.reminderStatus?.sent24h),
-      sent1h:
-        reminderType === '1h'
-          ? true
-          : Boolean(appointment.reminderStatus?.sent1h),
-      lastSentAt: new Date().toISOString(),
-      lastSentMode: mode,
+    return {
+      queueEntries,
     };
-
-    await appointment.save();
-    return appointment.toObject();
   },
 };
