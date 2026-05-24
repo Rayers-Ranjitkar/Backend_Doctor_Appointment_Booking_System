@@ -1,7 +1,5 @@
-// Demo users → used for seeding initial data (for testing/demo purposes)
-
+// Mock user data for authentication seeding
 export const demoUsers = [
-  //  Patient Users
   {
     id: 'u_patient_1',
     role: 'patient',
@@ -9,7 +7,7 @@ export const demoUsers = [
     username: 'alexjohnson',
     email: 'alex@norvicdemo.com',
     phone: '+977-9800000001',
-    profileId: 'p1', // linked Patient profile
+    profileId: 'p1',
     password: 'Patient@123',
   },
   {
@@ -22,8 +20,6 @@ export const demoUsers = [
     profileId: 'p2',
     password: 'Patient@123',
   },
-
-  //  Doctor Users
   {
     id: 'u_doctor_1',
     role: 'doctor',
@@ -31,7 +27,7 @@ export const demoUsers = [
     username: 'drjames',
     email: 'james@norvicdemo.com',
     phone: '+977-9801000001',
-    profileId: 'd1', // linked Doctor profile
+    profileId: 'd1',
     password: 'Doctor@123',
   },
   {
@@ -54,8 +50,6 @@ export const demoUsers = [
     profileId: 'd3',
     password: 'Doctor@123',
   },
-
-  //  Admin Users
   {
     id: 'u_admin_1',
     role: 'admin',
@@ -63,7 +57,7 @@ export const demoUsers = [
     username: 'adminmain',
     email: 'admin@norvicdemo.com',
     phone: '+977-9802000001',
-    profileId: null, // admins don't have profile
+    profileId: null,
     password: 'Admin@123',
   },
   {

@@ -1,3 +1,4 @@
+// Environment variables configuration and validation
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,6 +13,7 @@ export const env = {
   port: Number(process.env.PORT || 4000),
   mongoUri: process.env.MONGODB_URI || '',
   khaltiSecretKey: process.env.KHALTI_SECRET_KEY || 'demo_khalti_secret',
+  khaltiGatewayBaseUrl: process.env.KHALTI_GATEWAY_BASE_URL || 'https://dev.khalti.com/api/v2',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   smtpHost: process.env.SMTP_HOST || '',
   smtpPort: Number(process.env.SMTP_PORT || 587),
@@ -20,10 +22,10 @@ export const env = {
   smtpFrom: process.env.SMTP_FROM || 'noreply@medibook.local',
   reminderPollMs: Number(process.env.REMINDER_POLL_MS || 60000),
   jwtSecret: process.env.JWT_SECRET || 'norvic_demo_jwt_secret_change_me',
-  // Back-compat (no longer used by MediBook AI assistant)
+  // Back-compat (not currently used by MediBook AI assistant)
   geminiApiKey: process.env.GEMINI_API_KEY || '',
-  // ── Groq AI ─────────────────────────────────────────────────────────────
+  // ── Groq AI (MediBook AI assistant) ─────────────────────────────────
   // Used by MediBook AI assistant via POST /api/assistant
   groqApiKey: process.env.GROQ_API_KEY || '',
-  groqModel: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
+  groqModel: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
 };

@@ -3,6 +3,7 @@ import { env } from './env.js';
 
 let connected = false;
 
+// Establishes connection to the MongoDB database if URI is provided
 export async function connectDatabase() {
   if (!env.mongoUri) {
     console.log('MongoDB URI not provided. Backend will run with in-memory demo data.');
@@ -19,6 +20,7 @@ export async function connectDatabase() {
   return true;
 }
 
+// Returns the current database connection status
 export function isDatabaseConnected() {
   return connected;
 }

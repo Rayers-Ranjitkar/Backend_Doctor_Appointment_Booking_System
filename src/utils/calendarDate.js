@@ -6,11 +6,13 @@ export function calendarDateStringLocal(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
+// Checks if a given YYYY-MM-DD date string is strictly in the past
 export function isPastCalendarDate(ymd) {
   if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return true;
   return ymd < calendarDateStringLocal();
 }
 
+// Filters queue entries to keep only those corresponding to appointments on a specific day
 export function filterQueueEntriesForCalendarDay(queueEntries, appointments, dayYmd) {
   const dates = new Map(appointments.map((a) => [a.id, a.date]));
   return queueEntries.filter((e) => dates.get(e.appointmentId) === dayYmd);

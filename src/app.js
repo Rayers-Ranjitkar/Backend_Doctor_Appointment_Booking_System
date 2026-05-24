@@ -1,10 +1,12 @@
+// Express application setup and configuration
 import cors from 'cors';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
-import fs from 'fs';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import { Readable } from 'stream';
 import authRoutes from './routes/authRoutes.js';
 import clinicRoutes from './routes/clinicRoutes.js';
 import { env } from './config/env.js';
@@ -12,19 +14,16 @@ import { env } from './config/env.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `doctor-${Date.now()}${ext}`);
-  },
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// Multer using memory storage (no local disk saving)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) return cb(new Error('Only image files are allowed.'));
@@ -32,71 +31,39 @@ const upload = multer({
   },
 });
 
+// Initialize express application
 export const app = express();
 
+// Configure CORS and JSON body parsing middleware
 app.use(cors({ origin: env.clientUrl }));
 app.use(express.json());
 
-// Serve uploaded images statically
-app.use('/uploads', express.static(uploadsDir));
-
-// Image upload endpoint (multer handles multipart/form-data)
+// Image upload endpoint — uploads to Cloudinary
 app.post('/api/upload/image', upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file received.' });
-  const imageUrl = `/uploads/${req.file.filename}`;
-  res.json({ url: imageUrl });
+
+  const stream = cloudinary.uploader.upload_stream(
+    { folder: 'medibook/doctors' },
+    (error, result) => {
+      if (error) return res.status(500).json({ error: 'Upload failed.' });
+      res.json({ url: result.secure_url });
+    }
+  );
+
+  Readable.from(req.file.buffer).pipe(stream);
 });
 
+// Register authentication and clinic routes
 app.use('/api/auth', authRoutes);
 app.use('/api', clinicRoutes);
 
+// Health check endpoint
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', mode: env.mongoUri ? 'mongo' : 'demo-memory' });
 });
 
+// Root endpoint
 app.get('/', (_req, res) => {
   res.json({ service: 'medibook-backend', realtime: 'socket.io-enabled' });
 });
 
-app.get('/test-khalti', async (_req, res) => {
-  try {
-    const response = await fetch('https://dev.khalti.com/api/v2/epayment/initiate/', {
-      method: 'POST',
-      headers: {
-        Authorization: `Key ${env.khaltiSecretKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        return_url: 'http://localhost:5173/patient/khalti/callback',
-        website_url: 'http://localhost:5173',
-        amount: 1000,
-        purchase_order_id: 'test123',
-        purchase_order_name: 'Test',
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message, name: err.name });
-  }
-});
-
-app.get('/test-khalti-lookup', async (_req, res) => {
-  const pidx = _req.query.pidx;
-  try {
-    const response = await fetch('https://dev.khalti.com/api/v2/epayment/lookup/', {
-      method: 'POST',
-      headers: {
-        Authorization: `Key ${env.khaltiSecretKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ pidx }),
-      signal: AbortSignal.timeout(15000),
-    });
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message, name: err.name });
-  }
-});

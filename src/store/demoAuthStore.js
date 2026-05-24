@@ -20,6 +20,7 @@ async function ensureInitialized() {
 }
 
 export const demoAuthStore = {
+    // Validates credentials and generates access token in memory
   async login({ identifier, password, role }) {
     await ensureInitialized();
 
@@ -44,6 +45,7 @@ export const demoAuthStore = {
     };
   },
 
+    // Registers a new patient user and profile in memory
   async signupPatient(payload) {
     await ensureInitialized();
 
@@ -90,6 +92,7 @@ export const demoAuthStore = {
     };
   },
 
+    // Fetches authenticated user info from memory
   async me(auth) {
     await ensureInitialized();
     const user = state.users.find((item) => item.id === auth.sub);
@@ -97,6 +100,7 @@ export const demoAuthStore = {
     return sanitizeUser(user);
   },
 
+    // Creates an administrator user in memory
   async createAdmin(payload) {
     await ensureInitialized();
     const email = payload.email.trim().toLowerCase();
@@ -120,6 +124,7 @@ export const demoAuthStore = {
     return { user: sanitizeUser(user) };
   },
 
+    // Creates a doctor user and profile in memory
   async createDoctor(payload) {
     await ensureInitialized();
     const email = payload.email.trim().toLowerCase();
@@ -165,6 +170,7 @@ export const demoAuthStore = {
     return { user: sanitizeUser(user) };
   },
 
+    // Updates user password in memory after verifying current password
   async changePassword(userId, currentPassword, newPassword) {
     await ensureInitialized();
     const user = state.users.find((item) => item.id === userId);

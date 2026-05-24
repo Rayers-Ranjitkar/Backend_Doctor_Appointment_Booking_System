@@ -5,6 +5,7 @@ import { isDatabaseConnected } from '../config/database.js';
 
 const sentReminderKeys = new Set();
 
+// Parses appointment date and time strings into a unified JavaScript Date object
 function appointmentDateTime(appointment) {
   const [time, meridiem] = appointment.time.split(' ');
   const [hourPart, minutePart] = time.split(':').map(Number);
@@ -18,12 +19,14 @@ function appointmentDateTime(appointment) {
   return dt;
 }
 
+// Categorizes the reminder window based on remaining minutes until the appointment
 function reminderTypeFromMinutes(minutesUntil) {
   if (minutesUntil <= 60 && minutesUntil > 0) return '1h';
   if (minutesUntil <= 24 * 60 && minutesUntil > 60) return '24h';
   return null;
 }
 
+// Sweeps through confirmed appointments and fires due email/system reminders
 export async function runReminderSweep() {
   const store = isDatabaseConnected() ? dbClinicStore : clinicStore;
   const snapshot = await store.getBootstrap();
@@ -87,6 +90,7 @@ export async function runReminderSweep() {
   return results;
 }
 
+// Sets up the periodic interval timer to run the reminder sweep
 export function startReminderScheduler(pollMs) {
   setInterval(() => {
     runReminderSweep().catch((error) => {

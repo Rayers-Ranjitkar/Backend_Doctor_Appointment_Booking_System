@@ -4,17 +4,17 @@ import { env } from '../config/env.js';
 
 const TOKEN_EXPIRES_IN = '7d';
 
-// Hash user password
+// Hashes a plain-text password using bcrypt
 export async function hashPassword(password) {
   return bcrypt.hash(password, 10);
 }
 
-// Verify password
+// Compares a plain-text password against a hashed password
 export async function verifyPassword(password, passwordHash) {
   return bcrypt.compare(password, passwordHash);
 }
 
-// Create JWT token
+// Generates a JWT access token for a user
 export function createAccessToken(user) {
   return jwt.sign(
     {
@@ -26,18 +26,16 @@ export function createAccessToken(user) {
       name: user.name,
     },
     env.jwtSecret,
-    {
-      expiresIn: TOKEN_EXPIRES_IN,
-    }
+    { expiresIn: TOKEN_EXPIRES_IN },
   );
 }
 
-// Decode/verify JWT token
+// Decodes and validates a JWT access token
 export function readAccessToken(token) {
   return jwt.verify(token, env.jwtSecret);
 }
 
-// Remove sensitive data before sending user
+// Returns a sanitized user object removing sensitive fields
 export function sanitizeUser(user) {
   return {
     id: user.id,

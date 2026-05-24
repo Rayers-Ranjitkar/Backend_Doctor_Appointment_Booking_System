@@ -1,0 +1,32 @@
+[
+  {
+    "id": "dept-cardio",
+    "name": "Cardiology",
+    "summary": "Heart consultations, blood pressure management, ECG review, and cardiac follow-up care.",
+    "services": ["ECG review", "Cardiac consultation", "Hypertension follow-up", "Risk screening"]
+  },
+  {
+    "id": "dept-neuro",
+    "name": "Neurology",
+    "summary": "Care for migraines, seizures, dizziness, nerve-related symptoms, and long-term neurology reviews.",
+    "services": ["Migraine consultation", "Seizure review", "Neurological assessment", "Medication follow-up"]
+  },
+  {
+    "id": "dept-peds",
+    "name": "Pediatrics",
+    "summary": "Routine child care, vaccination guidance, growth monitoring, and pediatric follow-up visits.",
+    "services": ["Child consultation", "Growth monitoring", "Vaccination guidance", "Routine pediatric review"]
+  },
+  {
+    "id": "dept-derma",
+    "name": "Dermatology",
+    "summary": "Evaluation of skin rashes, acne care, long-term skin treatment, and follow-up consultation.",
+    "services": ["Acne treatment", "Skin rash review", "Follow-up care", "General dermatology"]
+  },
+  {
+    "id": "dept-general",
+    "name": "General Practice",
+    "summary": "First-contact consultation, general health concerns, preventive care, and referral support.",
+    "services": ["General consultation", "Preventive screening", "Primary care follow-up", "Referral support"]
+  }
+]

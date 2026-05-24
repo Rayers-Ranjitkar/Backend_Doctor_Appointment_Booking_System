@@ -3,10 +3,12 @@ import { env } from '../config/env.js';
 
 let transporter = null;
 
+// Checks whether SMTP environment configurations are available for sending emails
 function canSendEmail() {
   return Boolean(env.smtpHost && env.smtpUser && env.smtpPass);
 }
 
+// Initializes and returns the Nodemailer transporter instance if config is available
 function getTransporter() {
   if (!canSendEmail()) {
     return null;
@@ -27,6 +29,7 @@ function getTransporter() {
   return transporter;
 }
 
+// Sends a reminder email via SMTP or logs a message in console as fallback
 export async function sendReminderEmail({ to, subject, text }) {
   const mailer = getTransporter();
 
