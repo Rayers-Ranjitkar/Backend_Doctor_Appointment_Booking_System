@@ -1,0 +1,31 @@
+{
+  "name": "Norvic Hospital",
+  "tagline": "Advanced Care, Close to Home",
+  "about": "Norvic Hospital is a multi-specialty healthcare center focused on outpatient care, diagnostics, specialist consultations, queue-aware appointment management, and digital follow-up services.",
+  "address": {
+    "street": "Putalisadak Main Road",
+    "city": "Kathmandu",
+    "district": "Kathmandu",
+    "country": "Nepal",
+    "postalCode": "44600"
+  },
+  "contact": {
+    "phone": "+977-01-4567890",
+    "emergencyPhone": "+977-9801000000",
+    "email": "info@norvichospital.com",
+    "website": "https://www.norvichospital.com"
+  },
+  "hours": {
+    "outpatient": "Sunday to Friday, 8:00 AM to 6:00 PM",
+    "emergency": "24/7",
+    "pharmacy": "Sunday to Friday, 7:00 AM to 8:00 PM",
+    "lab": "Sunday to Friday, 7:30 AM to 5:30 PM"
+  },
+  "appointmentPolicy": {
+    "onlineBooking": true,
+    "queueTracking": true,
+    "digitalPrescriptions": true,
+    "paymentModes": ["Cash", "Card", "Khalti"],
+    "reminderWindows": ["24 hours before appointment", "1 hour before appointment"]
+  }
+}

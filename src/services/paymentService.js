@@ -15,10 +15,12 @@ function formatKhaltiErrorBody(data) {
   return null;
 }
 
+// Returns the gateway base URL configured for Khalti payments
 function khaltiBaseUrl() {
   return env.khaltiGatewayBaseUrl || 'https://dev.khalti.com/api/v2';
 }
 
+// Returns authentication headers for Khalti API requests
 function khaltiHeaders() {
   return {
     Authorization: `Key ${env.khaltiSecretKey}`,
@@ -26,6 +28,7 @@ function khaltiHeaders() {
   };
 }
 
+// Generates a local payment record object in the system
 export function createKhaltiPayment({
   amount,
   appointmentId,
@@ -48,6 +51,7 @@ export function createKhaltiPayment({
   };
 }
 
+// Calls the Khalti API to initiate an e-payment transaction
 export async function initiateKhaltiPayment(payload) {
   try {
     const response = await fetch(`${khaltiBaseUrl()}/epayment/initiate/`, {
@@ -71,6 +75,7 @@ export async function initiateKhaltiPayment(payload) {
   }
 }
 
+// Looks up the status of a Khalti payment using its pidx transaction ID
 export async function lookupKhaltiPayment(pidx) {
   try {
     const response = await fetch(`${khaltiBaseUrl()}/epayment/lookup/`, {

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "faq-1",
+    "question": "What are the OPD hours at Rayers Hospital?",
+    "answer": "Outpatient appointments run from Sunday to Friday, 8:00 AM to 6:00 PM."
+  },
+  {
+    "id": "faq-2",
+    "question": "Does Rayers Hospital support online appointment booking?",
+    "answer": "Yes. Patients can search doctors, choose a time slot, pay online, and receive reminders."
+  },
+  {
+    "id": "faq-3",
+    "question": "Can I track my queue position online?",
+    "answer": "Yes. Rayers Hospital supports live queue tracking with estimated wait time and consultation status."
+  },
+  {
+    "id": "faq-4",
+    "question": "Can I download prescriptions later?",
+    "answer": "Yes. Prescriptions uploaded by doctors are stored digitally and can be viewed or downloaded later."
+  },
+  {
+    "id": "faq-5",
+    "question": "What payment methods are accepted?",
+    "answer": "Cash, card, and Khalti are supported for consultation payment."
+  },
+  {
+    "id": "faq-6",
+    "question": "Can I leave a review after an appointment?",
+    "answer": "Yes. Once the doctor marks the appointment as completed, the patient can submit rating and written feedback."
+  },
+  {
+    "id": "faq-7",
+    "question": "Do you have emergency service?",
+    "answer": "Yes. Emergency support is available 24/7."
+  }
+]

@@ -1,3 +1,4 @@
+// Express router for clinic services, appointments, reviews, queues, and AI assistant
 import { Router } from 'express';
 import {
   addPrescription,
@@ -13,7 +14,6 @@ import {
   updatePrescription,
   updateQueue,
   verifyDoctor,
-  // NEW
   updateDoctorSchedule,
   deletePatient,
   addSpecialty,
@@ -31,6 +31,7 @@ import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
+// Enforce authentication on all clinic endpoints
 router.use(requireAuth);
 
 router.get('/bootstrap', getBootstrap);
@@ -52,7 +53,7 @@ router.post('/reviews', addReview);
 
 // Doctors
 router.patch('/doctors/:id/verification', verifyDoctor);
-router.patch('/doctors/:id/schedule', updateDoctorSchedule);   // NEW
+router.patch('/doctors/:id/schedule', updateDoctorSchedule);   
 
 // Assistant
 router.post('/assistant', askAssistant);
@@ -68,12 +69,12 @@ router.delete('/assistant/chats/:id', deleteAssistantChat);
 router.post('/reminders/run', triggerReminders);
 
 // Patients (admin)
-router.delete('/patients/:id', deletePatient);                  // NEW
+router.delete('/patients/:id', deletePatient);                  
 
 // Specialties (admin)
-router.post('/specialties', addSpecialty);                      // NEW
-router.patch('/specialties/:id', updateSpecialty);             // NEW
-router.delete('/specialties/:id', deleteSpecialty);            // NEW
+router.post('/specialties', addSpecialty);                      
+router.patch('/specialties/:id', updateSpecialty);             
+router.delete('/specialties/:id', deleteSpecialty);            
 router.patch('/notifications/mark-read', markAllNotificationsRead);
 
 // Payments (Khalti)

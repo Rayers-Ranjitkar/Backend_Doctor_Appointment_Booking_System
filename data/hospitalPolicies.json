@@ -1,0 +1,22 @@
+[
+  {
+    "id": "policy-booking",
+    "title": "Appointment Booking Policy",
+    "content": "Appointments are confirmed after slot validation. Online bookings prevent double-booking and preserve the selected schedule."
+  },
+  {
+    "id": "policy-reschedule",
+    "title": "Reschedule Policy",
+    "content": "Patients may reschedule subject to doctor availability. Conflicting slots are blocked automatically."
+  },
+  {
+    "id": "policy-feedback",
+    "title": "Feedback Policy",
+    "content": "Feedback can be submitted only after the doctor marks the appointment as completed."
+  },
+  {
+    "id": "policy-reminder",
+    "title": "Reminder Policy",
+    "content": "Reminder emails are sent approximately 24 hours and 1 hour before confirmed appointments."
+  }
+]

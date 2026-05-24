@@ -1,3 +1,4 @@
+// Mock database clinic data used for seeding and demo environment
 export const demoClinic = {
   specialties: [
     { id: 'sp1', name: 'Cardiology', icon: '❤️', color: '#EF4444', doctorCount: 12 },

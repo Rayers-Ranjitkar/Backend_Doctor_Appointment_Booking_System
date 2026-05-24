@@ -29,6 +29,7 @@ export async function initializeAuthSeed() {
 }
 
 export const dbAuthStore = {
+    // Validates credentials and generates access token using MongoDB
   async login({ identifier, password, role }) {
     const normalized = identifier.trim().toLowerCase();
     const user = await User.findOne({
@@ -50,6 +51,7 @@ export const dbAuthStore = {
     };
   },
 
+    // Registers a new patient user and profile in MongoDB
   async signupPatient(payload) {
     const email = payload.email.trim().toLowerCase();
     const username = payload.username.trim().toLowerCase();
@@ -96,12 +98,14 @@ export const dbAuthStore = {
     };
   },
 
+    // Fetches authenticated user info from MongoDB
   async me(auth) {
     const user = await User.findOne({ id: auth.sub }).lean();
     if (!user) return null;
     return sanitizeUser(user);
   },
 
+    // Creates an administrator user in MongoDB
   async createAdmin(payload) {
     const email = payload.email.trim().toLowerCase();
     const username = payload.username.trim().toLowerCase();
@@ -124,6 +128,7 @@ export const dbAuthStore = {
     return { user: sanitizeUser(user) };
   },
 
+    // Creates a doctor user and profile in MongoDB
   async createDoctor(payload) {
     const email = payload.email.trim().toLowerCase();
     const username = payload.username.trim().toLowerCase();
@@ -168,6 +173,7 @@ export const dbAuthStore = {
     return { user: sanitizeUser(user) };
   },
 
+    // Updates user password in MongoDB after verifying current password
   async changePassword(userId, currentPassword, newPassword) {
     const user = await User.findOne({ id: userId });
     if (!user) return { error: 'User not found.' };

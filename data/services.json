@@ -1,0 +1,32 @@
+[
+  {
+    "id": "svc-opd",
+    "name": "Outpatient Consultation",
+    "description": "Scheduled doctor appointments with queue tracking and reminder support.",
+    "available": true
+  },
+  {
+    "id": "svc-lab",
+    "name": "Diagnostic Lab",
+    "description": "Basic blood tests, urine tests, and doctor-requested diagnostics.",
+    "available": true
+  },
+  {
+    "id": "svc-pharmacy",
+    "name": "In-House Pharmacy",
+    "description": "Prescription medication pickup after consultation.",
+    "available": true
+  },
+  {
+    "id": "svc-prescription",
+    "name": "Digital Prescription Archive",
+    "description": "Patients can view past prescriptions online and download them later.",
+    "available": true
+  },
+  {
+    "id": "svc-queue",
+    "name": "Live Queue Tracking",
+    "description": "Patients can monitor waiting time and queue position from the portal.",
+    "available": true
+  }
+]
